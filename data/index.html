@@ -16,13 +16,20 @@
 <body>
   <div class="panel">
     <h1>COUNTER</h1>
-    <button id="toggle">COUNT</button>
+    <button onclick= "OnToggle('toggle_1');">COUNT</button>
+    <h1>COUNTER</h1>
+    <button onclick= "OnToggle('toggle_2');">COUNT</button>
   </div>
   <div class="dashboard">
     <div class="circle">
       <div class="circle__content">
-        <span id="COUNTER_VALUE">%COUNTER_VALUE%</span>
+        <span id="COUNTER_1_VALUE">%COUNTER_1_VALUE%</span>
       </div>
+    <div class="circle">
+      <div class="circle__content">
+        <span id="COUNTER_2_VALUE">%COUNTER_2_VALUE%</span>
+      </div>
+    </div>
   </div>
 </body>
 

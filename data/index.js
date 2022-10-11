@@ -17,7 +17,7 @@
  
  function onLoad(event) {
      initWebSocket();
-     initButton();
+    // initButton();
  }
  
  // ----------------------------------------------------------------------------
@@ -42,22 +42,27 @@
  }
  
  function onMessage(event) {
-
-   // var data = JSON.parse(event.data); 
-    document.getElementById('COUNTER_VALUE').innerHTML = event.data;
-    console.log(COUNTER_VALUE);
+    console.log(event.data);
+    var data = JSON.parse(event.data); 
+    if ("teller_1" in data) {
+    document.getElementById('COUNTER_1_VALUE').innerHTML = data.teller_1;}
+    if ("teller_2" in data) {
+    document.getElementById('COUNTER_2_VALUE').innerHTML = data.teller_2;}
  } 
  
  // ----------------------------------------------------------------------------
  // Button handling
  // ----------------------------------------------------------------------------
- 
+ /*
  function initButton() {
-     document.getElementById('toggle').addEventListener('click', onToggle);
- }
- 
- function onToggle(event) {
-    websocket.send(JSON.stringify({'action':'toggle'}));
+     document.getElementById('toggle_1').addEventListener('click', onToggle, 'toggle_1');
+     document.getElementById('toggle_2').addEventListener('click', onToggle, 'toggle_2');
+    }
+ */
+
+ function OnToggle(event_id) {
+    websocket.send(JSON.stringify({'action':event_id}));
+    console.log(JSON.stringify({'action':event_id}));
  }
 
  if (!!window.EventSource) {

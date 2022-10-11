@@ -18,22 +18,11 @@ const int dns_port = 53;
 const int http_port = 80;
 const int ws_port = 1337;
 
-int teller = 0;
-String count = "0";
-
-struct Led {
-    // state variables
-    uint8_t pin;
-    bool    on;
-
-    // methods
-    void update() {
-        Serial.printf("Led update");
-    }
-};
-
-#define LED_PIN   26
-Led    led         = { LED_PIN, true };
+int teller_1 = 1;
+int teller_2 = 2;
+int i = 0;
+String count_1 = "3";
+String count_2 = "4";
 
 AsyncWebServer server(http_port);
 AsyncWebSocket ws("/ws");
@@ -71,8 +60,11 @@ void initWiFi() {
 // ----------------------------------------------------------------------------
 
 String processor(const String &var) {
-    if(var == "COUNTER_VALUE"){
-        return String(count);
+    if(var == "COUNTER_1_VALUE"){
+        return String(count_1);
+    }
+    else if(var == "COUNTER_2_VALUE"){
+        return String(count_2);
     }
     return String();
 }
@@ -88,20 +80,14 @@ void initWebServer() {
     Serial.println("Webserver initialized");
 }
 
-void notifyClients() {
+void notifyClients(const char *id, String cont) {
     // const uint8_t size = JSON_OBJECT_SIZE(1);
     DynamicJsonDocument json(2048);
-    json["status"] = count;
+    json[id] = cont;
     char buffer[50];
     serializeJson(json, buffer);
-    Serial.print("capacity: ");
-    Serial.println(json.capacity());
-    Serial.print("overflowed: ");
-    Serial.println(json.overflowed());
-    Serial.print("buffer: ");
     Serial.println(buffer);
-    // events.send(count, "COUNTER_VALUE", millis());
-    ws.textAll(count);
+    ws.textAll(buffer);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -118,13 +104,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         }
 
         const char *action = json["action"];
-        if (strcmp(action, "toggle") == 0) {
-            count = ++teller;
-            notifyClients();
-            Serial.println("teller:");
-            Serial.println(count);
+        if (strcmp(action, "toggle_1") == 0) {
+            notifyClients("teller_1",(String)++teller_1);
         }
-
+        if (strcmp(action, "toggle_2") == 0) {
+            notifyClients("teller_2",(String)++teller_2);
+        }
     }
 }
 
@@ -167,7 +152,7 @@ void setup() {
     initWiFi();
     initWebSocket();
     initWebServer();
-    notifyClients();
+    notifyClients("teller_1", (String) teller_1);
 }
 
 // Main control loop
@@ -175,7 +160,10 @@ void setup() {
 
 void loop() {
     ws.cleanupClients();
-    Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
+    if (++i==9) {
+        Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
+        i=0;
+        }
     delay(1000);
 }
 
