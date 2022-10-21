@@ -21,8 +21,6 @@ const int ws_port = 1337;
 int teller_1 = 1;
 int teller_2 = 2;
 int i = 0;
-String count_1 = "3";
-String count_2 = "4";
 
 AsyncWebServer server(http_port);
 AsyncWebSocket ws("/ws");
@@ -61,10 +59,10 @@ void initWiFi() {
 
 String processor(const String &var) {
     if(var == "COUNTER_1_VALUE"){
-        return String(count_1);
+        return String(teller_1);
     }
     else if(var == "COUNTER_2_VALUE"){
-        return String(count_2);
+        return String(teller_2);
     }
     return String();
 }
@@ -79,37 +77,46 @@ void initWebServer() {
     server.begin();
     Serial.println("Webserver initialized");
 }
-
+/*
 void notifyClients(const char *id, String cont) {
     // const uint8_t size = JSON_OBJECT_SIZE(1);
     DynamicJsonDocument json(2048);
     json[id] = cont;
-    char buffer[50];
+    char buffer[2048];
     serializeJson(json, buffer);
     Serial.println(buffer);
     ws.textAll(buffer);
-}
+}*/
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     AwsFrameInfo *info = (AwsFrameInfo*)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
 
        // const uint8_t size = JSON_OBJECT_SIZE(1);
-        DynamicJsonDocument json(2048);
-        DeserializationError err = deserializeJson(json, data);
+        DynamicJsonDocument jsonw2c(2048);
+        DeserializationError err = deserializeJson(jsonw2c, data);
         if (err) {
             Serial.print(F("deserializeJson() failed with code "));
             Serial.println(err.c_str());
             return;
         }
 
-        const char *action = json["action"];
+        DynamicJsonDocument jsonc2w(2048);
+        const char *action = jsonw2c["action"];
         if (strcmp(action, "toggle_1") == 0) {
-            notifyClients("teller_1",(String)++teller_1);
+            jsonc2w["teller_1"] = (String)++teller_1;
         }
         if (strcmp(action, "toggle_2") == 0) {
-            notifyClients("teller_2",(String)++teller_2);
+            jsonc2w["teller_2"] = (String)++teller_2;
         }
+        if (strcmp(action, "toggle_1+2") == 0) {
+            jsonc2w["teller_1"] = (String)++teller_1;
+            jsonc2w["teller_2"] = (String)++teller_2;
+        }
+        char buffer[2048];
+        serializeJson(jsonc2w, buffer);
+        Serial.println(buffer);
+        ws.textAll(buffer);
     }
 }
 
@@ -152,7 +159,6 @@ void setup() {
     initWiFi();
     initWebSocket();
     initWebServer();
-    notifyClients("teller_1", (String) teller_1);
 }
 
 // Main control loop
