@@ -82,3 +82,24 @@ button {
 button:active {
   transform: translateY(2px);
 }
+
+#grid-col {
+  /* (A1) GRID LAYOUT */
+  display: grid;
+ 
+  /* (A2) SPECIFY COLUMNS */
+  grid-template-columns: 100% 100%;
+}
+
+#grid-row {
+  /* (A1) GRID LAYOUT */
+ display: grid;
+
+ /* (A2) SPECIFY COLUMNS */
+ grid-template-columns: auto auto;
+  
+  /* (A3) SPECIFY ROWS */
+  grid-template-rows: 100% 100%;
+
+}
+ 

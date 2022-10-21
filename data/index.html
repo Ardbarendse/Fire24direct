@@ -14,22 +14,34 @@
 </head>
 
 <body>
-  <div class="panel">
-    <button onclick= "OnToggle('toggle_1');">TELLER 1</button>
-    <button onclick= "OnToggle('toggle_2');">TELLER 2</button>
-    <button onclick= "OnToggle('toggle_1+2');">BEIDEN</button>
-  </div>
-  <div class="dashboard">
-    <div class="circle">
-      <div class="circle__content">
-        <span id="COUNTER_1_VALUE">%COUNTER_1_VALUE%</span>
-      </div>
-    <div class="circle">
-      <div class="circle__content">
-        <span id="COUNTER_2_VALUE">%COUNTER_2_VALUE%</span>
+  <div id="grid-row">
+    <div class="panel">
+      <button onclick= "OnToggle('toggle_1');">TELLER 1</button>
+    </div>
+    <div class="dashboard">
+      <div class="circle">
+        <div class="circle__content">
+          <span id="COUNTER_1_VALUE">%COUNTER_1_VALUE%</span>
+        </div>
       </div>
     </div>
   </div>
+  <div id="grid-row">
+    <div class="panel">
+      <button onclick= "OnToggle('toggle_2');">TELLER 2</button>
+    </div>
+    <div class="dashboard">
+      <div class="circle">
+        <div class="circle__content">
+          <span id="COUNTER_2_VALUE">%COUNTER_2_VALUE%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <button onclick= "OnToggle('toggle_1+2');">BEIDEN</button>
+  </div>
+</div>
 </body>
 
 </html>
