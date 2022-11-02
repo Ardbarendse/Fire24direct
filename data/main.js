@@ -19,7 +19,7 @@ let opts = {
   let target = document.querySelector('#gauge') // your canvas element
   
   let gaugeChart = new Gauge(target).setOptions(opts) // create sexy gauge!
-  gaugeChart.maxValue = 3000 // set max gauge value
+  gaugeChart.maxValue = 25 // set max gauge value
   gaugeChart.setMinValue(0) // Prefer setter over gauge.minValue = 0
-  gaugeChart.animationSpeed = 32 // set animation speed (32 is default value)
-  gaugeChart.set('COUNTER_2_VALUE') // set actual value
+  gaugeChart.animationSpeed = 16 // set animation speed (32 is default value)
+  gaugeChart.set(COUNTER_2_VALUE) // set actual value
