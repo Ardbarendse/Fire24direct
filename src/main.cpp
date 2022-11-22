@@ -1,15 +1,8 @@
-/**
- * ----------------------------------------------------------------------------
- * ESP32 Remote Control with WebSocket
- * ----------------------------------------------------------------------------
- * © 2020 Stéphane Calderoni
- * ----------------------------------------------------------------------------
- */
-
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <CAN.h>
 
 // WiFi credentials
 const char *ssid = "Fire24test";
@@ -17,10 +10,18 @@ const char *password =  "test1234";
 const int dns_port = 53;
 const int http_port = 80;
 const int ws_port = 1337;
+IPAddress apIP(192,168,4,1);
 
-int teller_1 = 1;
-int teller_2 = 2;
+int fuel = 1;
+int pressure = 2;
 int i = 0;
+
+uint8_t PressureByte = 0;
+uint8_t FuelByte = 19;
+uint8_t PressureOut = 3;
+uint8_t FuelOut = 5;
+
+TaskHandle_t Receive, Send;
 
 AsyncWebServer server(http_port);
 AsyncWebSocket ws("/ws");
@@ -31,16 +32,8 @@ AsyncEventSource events("/events");
 // ----------------------------------------------------------------------------
 
 void initSPIFFS() {
-  if (SPIFFS.begin()) {
-    Serial.println("Initiated SPIFFS volume...");
-    }
-    else {
-      Serial.print("Attempting initiating SPIFFS");
-      while (1) {
-        Serial.print(".");
-    }
-    Serial.println("Done!");
-  }
+  while (!SPIFFS.begin());
+  Serial.println("SPIFF Init done.");
 }
 
 // Connecting to the WiFi network
@@ -48,6 +41,8 @@ void initSPIFFS() {
 
 void initWiFi() {
   WiFi.softAP(ssid, password);
+  delay(2000);
+  WiFi.softAPConfig(apIP,apIP,IPAddress(255,255,255,0));
   Serial.println();
   Serial.println("AP running");
   Serial.print("My IP address: ");
@@ -58,11 +53,11 @@ void initWiFi() {
 // ----------------------------------------------------------------------------
 
 String processor(const String &var) {
-    if(var == "COUNTER_1_VALUE"){
-        return String(teller_1);
+    if(var == "fuel_up"){
+        return String(FuelOut);
     }
-    else if(var == "COUNTER_2_VALUE"){
-        return String(teller_2);
+    else if(var == "pressure_up"){
+        return String(PressureOut);
     }
     return String();
 }
@@ -75,7 +70,7 @@ void initWebServer() {
     server.on("/", onRootRequest);
     server.serveStatic("/", SPIFFS, "/");
     server.begin();
-    Serial.println("Webserver initialized");
+    Serial.println("Wid");
 }
 /*
 void notifyClients(const char *id, String cont) {
@@ -87,6 +82,42 @@ void notifyClients(const char *id, String cont) {
     Serial.println(buffer);
     ws.textAll(buffer);
 }*/
+
+void onReceive(void * pvParameters) {
+  for(;;){
+    int packetSize = CAN.parsePacket();
+    if (packetSize) {
+    // Serial.print("Received ");
+
+    DynamicJsonDocument jsonc2w(2048);
+
+    if (CAN.packetId() == 0x12){
+      while (CAN.available()){
+        for (int i = 0; i<CAN.packetDlc(); i++){
+          if (i==1)jsonc2w["pressure"] = (String)CAN.read();
+          else CAN.read();
+        }
+      }
+    }
+
+    if (CAN.packetId() == 0xabcdef){
+      while (CAN.available()){
+        for (int i = 0; i<CAN.packetDlc(); i++){
+          if (i==2)jsonc2w["fuel"] = (String)CAN.read();
+          else CAN.read();
+        }
+      }
+    } 
+
+    char buffer[2048];
+    serializeJson(jsonc2w, buffer);
+    // Serial.println(buffer);
+    ws.textAll(buffer);
+ 
+    // Serial.println();
+    }
+  }
+}
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -103,23 +134,22 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
         DynamicJsonDocument jsonc2w(2048);
         const char *action = jsonw2c["action"];
-        if (strcmp(action, "toggle_1") == 0) {
-            jsonc2w["teller_1"] = (String)++teller_1;
+        if (strcmp(action, "fuel_up") == 0) {
+            jsonc2w["fuel"] = (String)++fuel;
         }
-        if (strcmp(action, "toggle_2") == 0) {
-            jsonc2w["teller_2"] = (String)++teller_2;
+        if (strcmp(action, "pressure_up") == 0) {
+            jsonc2w["pressure"] = (String)++pressure;
         }
-        if (strcmp(action, "toggle_1+2") == 0) {
-            jsonc2w["teller_1"] = (String)++teller_1;
-            jsonc2w["teller_2"] = (String)++teller_2;
+        if (strcmp(action, "send_current") == 0) {
+            jsonc2w["fuel"] = (String)fuel;
+            jsonc2w["pressure"] = (String)pressure;
         }
         char buffer[2048];
         serializeJson(jsonc2w, buffer);
-        Serial.println(buffer);
+      //  Serial.println(buffer);
         ws.textAll(buffer);
     }
 }
-
 
 void onEvent(AsyncWebSocket       *server,
              AsyncWebSocketClient *client,
@@ -135,9 +165,9 @@ void onEvent(AsyncWebSocket       *server,
         case WS_EVT_DISCONNECT:
             Serial.printf("WebSocket client #%u disconnected\n", client->id());
             break;
-        case WS_EVT_DATA:
+         case WS_EVT_DATA:
             handleWebSocketMessage(arg, data, len);
-            break;
+            break; 
         case WS_EVT_PONG:
         case WS_EVT_ERROR:
             break;
@@ -149,27 +179,116 @@ void initWebSocket() {
     server.addHandler(&ws);
 }
 
-// Initialization
-// ----------------------------------------------------------------------------
+void initCAN() {
+      // start the CAN bus at 250 kbps
+  if (!CAN.begin(250E3)) {
+    Serial.println("Starting CAN failed!");
+    while (1);
+  }
+}
+
+/* void SendPacket(void * pvParameters){
+  for(;;) {
+         // send packet: id is 11 bits, packet can contain up to 8 bytes of data
+  // Serial.printf("Sending packet from... %d\r\n", xPortGetCoreID());
+  CAN.beginPacket(0x12);
+  CAN.write(1);
+  CAN.write((byte)(PressureByte++%24));
+  CAN.write(3);
+  CAN.write(4);
+  CAN.write(5);
+  CAN.write(6);
+  CAN.write(7);
+  CAN.write(8);
+  CAN.endPacket();
+
+  delay(1000);
+
+  // send extended packet: id is 29 bits, packet can contain up to 8 bytes of data
+   Serial.print("Sending extended packet ... ");
+
+  CAN.beginExtendedPacket(0xabcdef);
+  CAN.write('6');
+  CAN.write('7');
+  CAN.write((byte)(FuelByte++)%100);
+  CAN.write('9');
+  CAN.write('0');  
+  CAN.write('1');
+  CAN.write('2');
+  CAN.write('3');
+  CAN.endPacket();
+  
+  delay(1000);
+  }
+} */
 
 void setup() {
-    Serial.begin(115200); delay(500);
+    Serial.begin(115200); 
+    while (!Serial);
+    
+   /*  xTaskCreatePinnedToCore(
+      SendPacket,
+      "Sends CAN messages",
+      10000,
+      NULL,
+      0,
+      &Send,
+      0);
+ */
+    xTaskCreatePinnedToCore(
+    onReceive,
+    "Receives CAN messages",
+    10000,
+    NULL,
+    0,
+    &Receive,
+    0); 
 
     initSPIFFS();
     initWiFi();
     initWebSocket();
     initWebServer();
+    initCAN();
+    CAN.loopback();
+   // CAN.onReceive(onReceive);
 }
 
-// Main control loop
-// ----------------------------------------------------------------------------
-
 void loop() {
-    ws.cleanupClients();
-    if (++i==9) {
-        Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
-        i=0;
-        }
-    delay(1000);
+  ws.cleanupClients();
+
+  if (++i==9) {
+    Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
+    i=0;
+  }
+        // send packet: id is 11 bits, packet can contain up to 8 bytes of data
+  // Serial.printf("Sending packet from... %d\r\n", xPortGetCoreID());
+  CAN.beginPacket(0x12);
+  CAN.write(1);
+  CAN.write((byte)(PressureByte++%24));
+  CAN.write(3);
+  CAN.write(4);
+  CAN.write(5);
+  CAN.write(6);
+  CAN.write(7);
+  CAN.write(8);
+  CAN.endPacket();
+
+  delay(1000);
+
+  // send extended packet: id is 29 bits, packet can contain up to 8 bytes of data
+  //  Serial.print("Sending extended packet ... ");
+
+  CAN.beginExtendedPacket(0xabcdef);
+  CAN.write('6');
+  CAN.write('7');
+  CAN.write((byte)(FuelByte++)%100);
+  CAN.write('9');
+  CAN.write('0');  
+  CAN.write('1');
+  CAN.write('2');
+  CAN.write('3');
+  CAN.endPacket();
+  
+  delay(1000);
 }
 
