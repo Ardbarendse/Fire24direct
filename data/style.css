@@ -27,9 +27,9 @@ html {
     grid-gap: 2rem; 
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
-  .card { 
-    background-color: white; 
-    box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+  .card {
+    background-color: white;
+    box-shadow: 2px 0px 4px 1px rgb(140 140 140 / 50%);
   }
   .card-title { 
     font-size: 1.2rem;

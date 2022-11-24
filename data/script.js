@@ -2,16 +2,16 @@
 window.addEventListener('load', getReadings);
 
 // Button function
-function OnToggle(event_id) {
+/* function OnToggle(event_id) {
   websocket.send(JSON.stringify({'action':event_id}));
   console.log(JSON.stringify({'action':event_id}));
-}
+} */
 // Create fuel Gauge
 var gaugeFuel = new LinearGauge({
   renderTo: 'gauge-fuel',
-  width: 120,
-  height: 400,
-  units: "Fuel C",
+  width: 80,
+  height: 240,
+  units: "Fuel %",
   minValue: 0,
   startAngle: 90,
   ticksAngle: 180,
@@ -57,11 +57,11 @@ var gaugeFuel = new LinearGauge({
 // Create Pressure Gauge
 var gaugePressure = new RadialGauge({
   renderTo: 'gauge-pressure',
-  width: 300,
-  height: 300,
+  width: 200,
+  height: 200,
   units: "Pressure (%)",
   minValue: 0,
-  maxValue: 25,
+  maxValue: 24,
   colorValueBoxRect: "#049faa",
   colorValueBoxRectEnd: "#049faa",
   colorValueBoxBackground: "#f1fbfc",
@@ -70,17 +70,17 @@ var gaugePressure = new RadialGauge({
       "0",
       "4",
       "8",
-      "10",
       "12",
       "16",
-      "20"
+      "20",
+      "24"
   ],
   minorTicks: 1,
   strokeTicks: true,
   highlights: [
       {
           "from": 16,
-          "to": 25,
+          "to": 24,
           "color": "#03C0C1"
       }
   ],
