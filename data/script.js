@@ -6,12 +6,12 @@ window.addEventListener('load', getReadings);
   websocket.send(JSON.stringify({'action':event_id}));
   console.log(JSON.stringify({'action':event_id}));
 } */
-// Create fuel Gauge
-var gaugeFuel = new LinearGauge({
-  renderTo: 'gauge-fuel',
+// Create watertank Gauge
+var gaugeWatertank = new LinearGauge({
+  renderTo: 'gauge-watertank',
   width: 80,
   height: 240,
-  units: "Fuel %",
+  units: "Watertank %",
   minValue: 0,
   startAngle: 90,
   ticksAngle: 180,
@@ -59,7 +59,7 @@ var gaugePressure = new RadialGauge({
   renderTo: 'gauge-pressure',
   width: 200,
   height: 200,
-  units: "Pressure (%)",
+  units: "Pressure (BAR)",
   minValue: 0,
   maxValue: 24,
   colorValueBoxRect: "#049faa",
@@ -140,8 +140,8 @@ function onClose(event) {
 function onMessage(event) {
    console.log(event.data);
    var data = JSON.parse(event.data); 
-   if ("fuel" in data) {
-    gaugeFuel.value = data.fuel;
+   if ("watertank" in data) {
+    gaugeWatertank.value = data.watertank;
     }
     if ("pressure" in data) {
      gaugePressure.value = data.pressure;

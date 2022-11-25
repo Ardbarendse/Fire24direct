@@ -13,14 +13,14 @@ const int http_port = 80;
 const int ws_port = 1337;
 IPAddress apIP(192,168,4,1);
 
-int fuel = 1;
+int watertank = 1;
 int pressure = 2;
 int i = 0;
 
 uint8_t PressureByte = 0;
-uint8_t FuelByte = 19;
+uint8_t WatertankByte = 19;
 uint8_t PressureOut = 3;
-uint8_t FuelOut = 5;
+uint8_t WatertankOut = 5;
 
 TaskHandle_t Receive, Send;
 
@@ -54,8 +54,8 @@ void initWiFi() {
 // ----------------------------------------------------------------------------
 
 String processor(const String &var) {
-    if(var == "fuel_up"){
-        return String(FuelOut);
+    if(var == "watertank_up"){
+        return String(WatertankOut);
     }
     else if(var == "pressure_up"){
         return String(PressureOut);
@@ -90,7 +90,7 @@ void onReceive(void * pvParameters) {
   for(;;){
     int packetSize = CAN.parsePacket();
     if (packetSize) {
-    Serial.print("Received ");
+    // Serial.print("Received ");
 
     DynamicJsonDocument jsonc2w(2048);
     word ID = CAN.packetId();
@@ -108,7 +108,7 @@ void onReceive(void * pvParameters) {
       case 0xabcdef:
         while (CAN.available()){
           for (int i = 0; i<CAN.packetDlc(); i++){
-            if (i==2)jsonc2w["fuel"] = (String)CAN.read();
+            if (i==2)jsonc2w["watertank"] = (String)CAN.read();
             else CAN.read();
           }
         }
@@ -117,7 +117,7 @@ void onReceive(void * pvParameters) {
 
     char buffer[2048];
     serializeJson(jsonc2w, buffer);
-    Serial.println(buffer);
+    // Serial.println(buffer);
     ws.textAll(buffer);
  
     // Serial.println();
@@ -178,41 +178,6 @@ void initCAN() {
   }
 }
 
-/* void SendPacket(void * pvParameters){
-  for(;;) {
-         // send packet: id is 11 bits, packet can contain up to 8 bytes of data
-  // Serial.printf("Sending packet from... %d\r\n", xPortGetCoreID());
-  CAN.beginPacket(0x12);
-  CAN.write(1);
-  CAN.write((byte)(PressureByte++%24));
-  CAN.write(3);
-  CAN.write(4);
-  CAN.write(5);
-  CAN.write(6);
-  CAN.write(7);
-  CAN.write(8);
-  CAN.endPacket();
-
-  delay(1000);
-
-  // send extended packet: id is 29 bits, packet can contain up to 8 bytes of data
-   Serial.print("Sending extended packet ... ");
-
-  CAN.beginExtendedPacket(0xabcdef);
-  CAN.write('6');
-  CAN.write('7');
-  CAN.write((byte)(FuelByte++)%100);
-  CAN.write('9');
-  CAN.write('0');  
-  CAN.write('1');
-  CAN.write('2');
-  CAN.write('3');
-  CAN.endPacket();
-  
-  delay(1000);
-  }
-} */
-
 void setup() {
     Serial.begin(115200); 
     while (!Serial);
@@ -251,35 +216,7 @@ void loop() {
     Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
     i=0;
   }
-        // send packet: id is 11 bits, packet can contain up to 8 bytes of data
-  // Serial.printf("Sending packet from... %d\r\n", xPortGetCoreID());
-/*   CAN.beginPacket(0x12);
-  CAN.write(1);
-  CAN.write((byte)(PressureByte++%24));
-  CAN.write(3);
-  CAN.write(4);
-  CAN.write(5);
-  CAN.write(6);
-  CAN.write(7);
-  CAN.write(8);
-  CAN.endPacket();
 
-  delay(1000);
-
-  // send extended packet: id is 29 bits, packet can contain up to 8 bytes of data
-  //  Serial.print("Sending extended packet ... ");
-
-  CAN.beginExtendedPacket(0xabcdef);
-  CAN.write('6');
-  CAN.write('7');
-  CAN.write((byte)(FuelByte++)%100);
-  CAN.write('9');
-  CAN.write('0');  
-  CAN.write('1');
-  CAN.write('2');
-  CAN.write('3');
-  CAN.endPacket();
-   */
   delay(1000);
 }
 
