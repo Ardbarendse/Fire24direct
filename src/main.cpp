@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <CAN.h>
+#include <esp_task_wdt.h>
 
 // WiFi credentials
 const char *ssid = "Fire24test";
@@ -84,34 +85,39 @@ void notifyClients(const char *id, String cont) {
 }*/
 
 void onReceive(void * pvParameters) {
+  esp_task_wdt_delete(NULL);
+  // esp_task_wdt_status();
   for(;;){
     int packetSize = CAN.parsePacket();
     if (packetSize) {
-    // Serial.print("Received ");
+    Serial.print("Received ");
 
     DynamicJsonDocument jsonc2w(2048);
+    word ID = CAN.packetId();
 
-    if (CAN.packetId() == 0x12){
-      while (CAN.available()){
-        for (int i = 0; i<CAN.packetDlc(); i++){
-          if (i==1)jsonc2w["pressure"] = (String)CAN.read();
-          else CAN.read();
+    switch (ID){
+      case 0x12:
+        while (CAN.available()){
+          for (int i = 0; i<CAN.packetDlc(); i++){
+            if (i==1)jsonc2w["pressure"] = (String)CAN.read();
+            else CAN.read();
+          }
         }
-      }
+      break;
+
+      case 0xabcdef:
+        while (CAN.available()){
+          for (int i = 0; i<CAN.packetDlc(); i++){
+            if (i==2)jsonc2w["fuel"] = (String)CAN.read();
+            else CAN.read();
+          }
+        }
+      break; 
     }
-
-    if (CAN.packetId() == 0xabcdef){
-      while (CAN.available()){
-        for (int i = 0; i<CAN.packetDlc(); i++){
-          if (i==2)jsonc2w["fuel"] = (String)CAN.read();
-          else CAN.read();
-        }
-      }
-    } 
 
     char buffer[2048];
     serializeJson(jsonc2w, buffer);
-    // Serial.println(buffer);
+    Serial.println(buffer);
     ws.textAll(buffer);
  
     // Serial.println();
@@ -132,22 +138,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             return;
         }
 
-        DynamicJsonDocument jsonc2w(2048);
-        const char *action = jsonw2c["action"];
-        if (strcmp(action, "fuel_up") == 0) {
-            jsonc2w["fuel"] = (String)++fuel;
-        }
-        if (strcmp(action, "pressure_up") == 0) {
-            jsonc2w["pressure"] = (String)++pressure;
-        }
-        if (strcmp(action, "send_current") == 0) {
-            jsonc2w["fuel"] = (String)fuel;
-            jsonc2w["pressure"] = (String)pressure;
-        }
-        char buffer[2048];
-        serializeJson(jsonc2w, buffer);
-      //  Serial.println(buffer);
-        ws.textAll(buffer);
+/*   */
     }
 }
 
@@ -243,13 +234,13 @@ void setup() {
     0,
     &Receive,
     0); 
-
+    
     initSPIFFS();
     initWiFi();
     initWebSocket();
     initWebServer();
     initCAN();
-    CAN.loopback();
+    // CAN.loopback();
    // CAN.onReceive(onReceive);
 }
 
@@ -262,7 +253,7 @@ void loop() {
   }
         // send packet: id is 11 bits, packet can contain up to 8 bytes of data
   // Serial.printf("Sending packet from... %d\r\n", xPortGetCoreID());
-  CAN.beginPacket(0x12);
+/*   CAN.beginPacket(0x12);
   CAN.write(1);
   CAN.write((byte)(PressureByte++%24));
   CAN.write(3);
@@ -288,7 +279,7 @@ void loop() {
   CAN.write('2');
   CAN.write('3');
   CAN.endPacket();
-  
+   */
   delay(1000);
 }
 
