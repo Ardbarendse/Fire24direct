@@ -13,9 +13,12 @@ const int http_port = 80;
 const int ws_port = 1337;
 IPAddress apIP(192,168,4,1);
 
-int watertank = 1;
-int pressure = 2;
+int watertank = 0;
+float pressure = 0;
 int i = 0;
+
+int UpdateInterval = 250; //dashboard update ms
+int Lastupdate = 0;
 
 uint8_t PressureByte = 0;
 uint8_t WatertankByte = 19;
@@ -95,32 +98,67 @@ void onReceive(void * pvParameters) {
     DynamicJsonDocument jsonc2w(2048);
     word ID = CAN.packetId();
 
-    switch (ID){
-      case 0x12:
-        while (CAN.available()){
+    /*  printf ("CANID: %d \n", ID);
+     if (ID == 201589256){
+      while (CAN.available()){
           for (int i = 0; i<CAN.packetDlc(); i++){
-            if (i==1)jsonc2w["pressure"] = (String)CAN.read();
-            else CAN.read();
+            printf (" %d ", CAN.read());
           }
+        }
+      printf("\n"); 
+     } */
+    
+      switch (ID){
+      case 201589256:
+        while (CAN.available()){
+          pressure = 0;
+          for (int i = 0; i<CAN.packetDlc(); i++){
+            switch (i){
+              case 0: pressure += (0.01 * (float)CAN.read());
+              break;
+              case 1: pressure += (2.56 * (float)CAN.read());
+              break;
+              default: CAN.read();
+              break;
+            }
+          }
+          // jsonc2w["pressure"] = pressure;
+          printf ("pressure: %f \n", pressure);
         }
       break;
 
-      case 0xabcdef:
+      case 201787412:
         while (CAN.available()){
+          watertank = 0;
           for (int i = 0; i<CAN.packetDlc(); i++){
-            if (i==2)jsonc2w["watertank"] = (String)CAN.read();
-            else CAN.read();
+            switch (i){
+              case 2: watertank += CAN.read();
+              break;
+              case 3: watertank += (256 * CAN.read());
+              break;
+              default: CAN.read();
+              break;
+            }
           }
+          // jsonc2w["pressure"] = pressure;
+          printf ("water   : %d \n", watertank);
         }
-      break; 
+      break;  
     }
 
-    char buffer[2048];
-    serializeJson(jsonc2w, buffer);
-    // Serial.println(buffer);
-    ws.textAll(buffer);
+    if ((millis() - Lastupdate > UpdateInterval)){
+      char buffer[2048];
+      jsonc2w["pressure"] = pressure;
+      jsonc2w["watertank"] = watertank;
+      serializeJson(jsonc2w, buffer);
+      // Serial.println(buffer);
+      ws.textAll(buffer);
+      Lastupdate = millis();
+    }
+    
+
  
-    // Serial.println();
+    // Serial.println(); */
     }
   }
 }
@@ -137,8 +175,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             Serial.println(err.c_str());
             return;
         }
-
-/*   */
     }
 }
 
