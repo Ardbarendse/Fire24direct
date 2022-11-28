@@ -123,7 +123,7 @@ void onReceive(void * pvParameters) {
             }
           }
           // jsonc2w["pressure"] = pressure;
-          printf ("pressure: %f \n", pressure);
+          // printf ("pressure: %f \n", pressure);
         }
       break;
 
@@ -141,7 +141,7 @@ void onReceive(void * pvParameters) {
             }
           }
           // jsonc2w["pressure"] = pressure;
-          printf ("water   : %d \n", watertank);
+          // printf ("water   : %d \n", watertank);
         }
       break;  
     }
@@ -151,7 +151,7 @@ void onReceive(void * pvParameters) {
       jsonc2w["pressure"] = pressure;
       jsonc2w["watertank"] = watertank;
       serializeJson(jsonc2w, buffer);
-      // Serial.println(buffer);
+      Serial.println(buffer);
       ws.textAll(buffer);
       Lastupdate = millis();
     }
