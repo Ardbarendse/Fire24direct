@@ -15,7 +15,7 @@ var gaugeWatertank = new LinearGauge({
   minValue: 0,
   startAngle: 90,
   ticksAngle: 180,
-  maxValue: 100,
+  maxValue: 10000,
   colorValueBoxRect: "#049faa",
   colorValueBoxRectEnd: "#049faa",
   colorValueBoxBackground: "#f1fbfc",
@@ -23,11 +23,11 @@ var gaugeWatertank = new LinearGauge({
   valueInt: 2,
   majorTicks: [
       "0",
-      "20",
-      "40",
-      "60",
-      "80",
-      "100",
+      "2000",
+      "4000",
+      "6000",
+      "8000",
+      "10000",
   ],
   minorTicks: 4,
   strokeTicks: true,
@@ -48,9 +48,9 @@ var gaugeWatertank = new LinearGauge({
   needleCircleSize: 7,
   needleCircleOuter: true,
   needleCircleInner: false,
-  animation: false,
- // animationDuration: 1500,
- // animationRule: "linear",
+  animation: true,
+  animationDuration: 245,
+  animationRule: "linear",
   barWidth: 10,
 }).draw();
   
@@ -95,9 +95,9 @@ var gaugePressure = new RadialGauge({
   colorNeedleCircleOuter: "#007F80",
   needleCircleOuter: true,
   needleCircleInner: false,
-  animation: false,
-//  animationDuration: 1500,
-//  animationRule: "linear"
+  animation: true,
+  animationDuration: 245,
+  animationRule: "linear"
 }).draw();
 
  
