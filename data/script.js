@@ -47,8 +47,8 @@ var gaugeWatertank = new LinearGauge({
   needleCircleSize: 7,
   needleCircleOuter: true,
   needleCircleInner: false,
-  animation: true,
-  animationDuration: 245,
+  animation: false,
+  animationDuration: 240,
   animationRule: "linear",
   barWidth: 10,
 }).draw();
@@ -94,8 +94,8 @@ var gaugePressure = new RadialGauge({
   colorNeedleCircleOuter: "#007F80",
   needleCircleOuter: true,
   needleCircleInner: false,
-  animation: true,
-  animationDuration: 245,
+  animation: false,
+  animationDuration: 230,
   animationRule: "linear"
 }).draw();
 

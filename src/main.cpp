@@ -4,6 +4,7 @@
 #include <ESPAsyncWebServer.h>
 #include <CAN.h>
 #include <esp_task_wdt.h>
+#include <CANController.h>
 
 // WiFi credentials
 const char *ssid = "Fire24test";
@@ -88,94 +89,111 @@ void notifyClients(const char *id, String cont) {
 }*/
 
 void onReceive(void * pvParameters) {
-  esp_task_wdt_delete(NULL);
-  // esp_task_wdt_status();
+  // esp_task_wdt_delete(NULL);
+  CAN.filterExtended((long)201589256);
+  
   for(;;){
     int packetSize = CAN.parsePacket();
     if (packetSize) {
-    // Serial.print("Received ");
 
-    DynamicJsonDocument jsonc2w(2048);
-    word ID = CAN.packetId();
+      DynamicJsonDocument jsonc2w(2048);
+      word ID = CAN.packetId();
+      
 
-    /*  printf ("CANID: %d \n", ID);
-     if (ID == 201589256){
-      while (CAN.available()){
-          for (int i = 0; i<CAN.packetDlc(); i++){
-            printf (" %d ", CAN.read());
-          }
-        }
-      printf("\n"); 
-     } */
-    
       switch (ID){
-      case 201589256:
-        while (CAN.available()){
-          pressure = 0;
-          for (int i = 0; i<CAN.packetDlc(); i++){
-            switch (i){
-              case 0: pressure += (0.01 * (float)CAN.read());
-              break;
-              case 1: pressure += (2.56 * (float)CAN.read());
-              break;
-              default: CAN.read();
-              break;
+        case 201589256:
+          Serial.println("pressure 1");
+          while (CAN.available()){
+            pressure = 0;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 0: pressure += (0.01 * (float)CAN.read());
+                break;
+                case 1: pressure += (2.56 * (float)CAN.read());
+                break;
+                default: CAN.read();
+                break;
+              }
             }
           }
-          // jsonc2w["pressure"] = pressure;
-          // printf ("pressure: %f \n", pressure);
-        }
-      break;
+        break;
 
-      case 201787412:
-        while (CAN.available()){
-          watertank = 0;
-          for (int i = 0; i<CAN.packetDlc(); i++){
-            switch (i){
-              case 2: watertank += CAN.read();
-              break;
-              case 3: watertank += (256 * CAN.read());
-              break;
-              default: CAN.read();
-              break;
+        case 201596170:
+          Serial.println("pressure 2");
+          while (CAN.available()){
+            pressure = 0;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 2: pressure += (0.01 * (float)CAN.read());
+                break;
+                case 3: pressure += (2.56 * (float)CAN.read());
+                break;
+                default: CAN.read();
+                break;
+              }
             }
           }
-          // jsonc2w["pressure"] = pressure;
-          // printf ("water   : %d \n", watertank);
-        }
-      break;  
-    }
+        break;
+        
+        case 201787412:
+          Serial.println("tank level 1");
+          while (CAN.available()){
+            watertank = 0;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 2: watertank += CAN.read();
+                break;
+                case 3: watertank += (256 * CAN.read());
+                break;
+                default: CAN.read();
+                break;
+              }
+            }
+          }
+        break;  
+                
+        case 201785349:
+          Serial.println("tank level 2");
+          while (CAN.available()){
+            watertank = 0;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 0: watertank += CAN.read();
+                break;
+                case 1: watertank += (256 * CAN.read());
+                break;
+                default: CAN.read();
+                break;
+              }
+            }
+          }
+        break;  
+      }
 
     if ((millis() - Lastupdate > UpdateInterval)){
       char buffer[2048];
       jsonc2w["pressure"] = pressure;
       jsonc2w["watertank"] = watertank;
       serializeJson(jsonc2w, buffer);
-      Serial.println(buffer);
+    //   Serial.println(buffer);
       ws.textAll(buffer);
       Lastupdate = millis();
     }
-    
-
- 
-    // Serial.println(); */
     }
   }
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
-    AwsFrameInfo *info = (AwsFrameInfo*)arg;
-    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-
-       // const uint8_t size = JSON_OBJECT_SIZE(1);
-        DynamicJsonDocument jsonw2c(2048);
-        DeserializationError err = deserializeJson(jsonw2c, data);
-        if (err) {
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(err.c_str());
-            return;
-        }
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+    DynamicJsonDocument jsonw2c(2048);
+    DeserializationError err = deserializeJson(jsonw2c, data);
+    if (err) {
+      Serial.print(F("deserializeJson() failed with code "));
+      Serial.println(err.c_str());
+      return;
     }
+  }
 }
 
 void onEvent(AsyncWebSocket       *server,
@@ -249,7 +267,7 @@ void loop() {
   ws.cleanupClients();
 
   if (++i==9) {
-    Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
+    // Serial.printf("[RAM: %d]\r\n", esp_get_free_heap_size());
     i=0;
   }
 
