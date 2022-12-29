@@ -17,6 +17,8 @@ IPAddress apIP(192,168,4,1);
 int watertank = 0;
 float pressure = 0;
 int i = 0;
+int FuelTank = 0;
+int EngCoolTemp = 0;
 
 int UpdateInterval = 250; //dashboard update ms
 int Lastupdate = 0;
@@ -75,7 +77,7 @@ void initWebServer() {
     server.on("/", onRootRequest);
     server.serveStatic("/", SPIFFS, "/");
     server.begin();
-    Serial.println("Wid");
+    // Serial.println("Wid");
 }
 /*
 void notifyClients(const char *id, String cont) {
@@ -98,11 +100,11 @@ void onReceive(void * pvParameters) {
 
       DynamicJsonDocument jsonc2w(2048);
       word ID = CAN.packetId();
-      
+      // Serial.print("a");
 
       switch (ID){
-        case 201589256:
-          Serial.println("pressure 1");
+        case (int)0xc040208:        //pump pressure
+          // Serial.print("b");
           while (CAN.available()){
             pressure = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
@@ -118,8 +120,8 @@ void onReceive(void * pvParameters) {
           }
         break;
 
-        case 201596170:
-          Serial.println("pressure 2");
+        case (int)0xc041d0a:             // pump pressure
+          // Serial.print("c");
           while (CAN.available()){
             pressure = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
@@ -135,8 +137,8 @@ void onReceive(void * pvParameters) {
           }
         break;
         
-        case 201787412:
-          Serial.println("tank level 1");
+        case (int)0xc070814:                 // water tank level
+          // Serial.print("d");
           while (CAN.available()){
             watertank = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
@@ -152,8 +154,8 @@ void onReceive(void * pvParameters) {
           }
         break;  
                 
-        case 201785349:
-          Serial.println("tank level 2");
+        case (int)0xc070005:          // Water tank level
+          // Serial.print("e");
           while (CAN.available()){
             watertank = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
@@ -167,6 +169,39 @@ void onReceive(void * pvParameters) {
               }
             }
           }
+        break;
+
+        case (int)0xc010201:          // Fuel tank level
+          // Serial.print("f");
+          while (CAN.available()){
+            FuelTank = 0;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 4: FuelTank += CAN.read();
+                break;
+                case 5: FuelTank += (256 * CAN.read());
+                break;
+                default: CAN.read();
+                break;
+              }
+            }
+            // FuelTank = FuelTank / 10;
+          }
+        break;
+
+        case (int)0xc010601:    // engine temp
+          // Serial.print("g");
+          while (CAN.available()){
+            EngCoolTemp = -40;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 0: EngCoolTemp += CAN.read();
+                break;
+                default: CAN.read();
+                break;
+              }
+            }
+          }
         break;  
       }
 
@@ -174,8 +209,12 @@ void onReceive(void * pvParameters) {
       char buffer[2048];
       jsonc2w["pressure"] = pressure;
       jsonc2w["watertank"] = watertank;
+      jsonc2w["fueltank"] = FuelTank;
+      jsonc2w["engcooltemp"] = EngCoolTemp;
+
       serializeJson(jsonc2w, buffer);
-    //   Serial.println(buffer);
+      // Serial.println("");
+      Serial.println(buffer);
       ws.textAll(buffer);
       Lastupdate = millis();
     }

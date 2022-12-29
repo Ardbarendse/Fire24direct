@@ -1,5 +1,16 @@
 {
-  "dependencies": {
-    "canvas-gauges": "^2.1.7"
+  "name": "fire24direct",
+  "version": "test",
+  "description": "",
+  "main": "scripts.js",
+  "scripts": {
+    "start:win32": "browser-sync start --server --files '**/*.css, **/*.html, **/*.js, !node_modules/**/*' --directory --port 7777 --browser \"C:\\Program Files\\Mozilla Firefox\\firefox.exe\"",
+    "start:darwin:linux": "browser-sync start --server --files '**/*.css, **/*.html, **/*.js, !node_modules/**/*' --directory --port 7777 --browser 'Firefox Developer Edition'"
+
+  },
+  "start": "run-script-os",
+  "devDependencies": {
+  "browser-sync": "^2.26.13",
+  "run-script-os": "^1.1.5"
   }
 }
