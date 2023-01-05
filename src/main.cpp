@@ -15,12 +15,20 @@ const int ws_port = 1337;
 IPAddress apIP(192,168,4,1);
 
 int watertank = 0;
+int watertankread = 0;
+int foamtank = 0;
+int foamtankread = 0;
 float pressure = 0;
+float pressureread = 0;
 int i = 0;
 int FuelTank = 0;
+int FuelTankread = 0;
 int EngCoolTemp = 0;
+int EngCoolTempread = 0;
+int PTOSpeed = 0;
+int PTOSpeedread = 0;
 
-int UpdateInterval = 250; //dashboard update ms
+int UpdateInterval = 400; //dashboard update ms
 int Lastupdate = 0;
 
 uint8_t PressureByte = 0;
@@ -102,118 +110,153 @@ void onReceive(void * pvParameters) {
       word ID = CAN.packetId();
       // Serial.print("a");
 
-      switch (ID){
-        case (int)0xc040208:        //pump pressure
+      
+        if (ID>= (int)0xc040200 && ID < (int)0xc040300){        //pump pressure
           // Serial.print("b");
           while (CAN.available()){
-            pressure = 0;
+            pressureread = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
               switch (i){
-                case 0: pressure += (0.01 * (float)CAN.read());
+                case 0: pressureread += (0.01 * (float)CAN.read());
                 break;
-                case 1: pressure += (2.56 * (float)CAN.read());
+                case 1: pressureread += (2.56 * (float)CAN.read());
                 break;
                 default: CAN.read();
                 break;
               }
+              // Serial.println(pressureread);
+              if (pressureread < 65) {pressure = pressureread;};
             }
           }
-        break;
+        }
 
-        case (int)0xc041d0a:             // pump pressure
+        else if (ID==(int)0xc041d0a){            // pump pressure
           // Serial.print("c");
           while (CAN.available()){
-            pressure = 0;
+            pressureread = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
               switch (i){
-                case 2: pressure += (0.01 * (float)CAN.read());
+                case 2: pressureread += (0.01 * (float)CAN.read());
                 break;
-                case 3: pressure += (2.56 * (float)CAN.read());
+                case 3: pressureread += (2.56 * (float)CAN.read());
                 break;
                 default: CAN.read();
                 break;
               }
+            if (pressureread < 650) {pressure = pressureread;};
             }
           }
-        break;
+        }
         
-        case (int)0xc070814:                 // water tank level
+/*         else if (ID >= (int)0xc070800 && ID < (int)0xc080900){                 // water tank level
           // Serial.print("d");
           while (CAN.available()){
-            watertank = 0;
+            watertankread = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
               switch (i){
-                case 2: watertank += CAN.read();
+                case 2: watertankread += CAN.read();
                 break;
-                case 3: watertank += (256 * CAN.read());
+                case 3: watertankread += (256 * CAN.read());
                 break;
                 default: CAN.read();
                 break;
+                if (watertankread < 65000) watertank = watertankread;
               }
             }
           }
-        break;  
+        }   */
                 
-        case (int)0xc070005:          // Water tank level
+        else if (ID >= (int)0xc070000 && ID < (int)0xc070100){         // Water tank level percentage
           // Serial.print("e");
           while (CAN.available()){
-            watertank = 0;
+            watertankread = 0;
+            foamtankread = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
               switch (i){
-                case 0: watertank += CAN.read();
+                case 0: watertankread += CAN.read();
                 break;
-                case 1: watertank += (256 * CAN.read());
+                case 1: watertankread += (256 * CAN.read());
+                break;
+                case 2: foamtankread += CAN.read();
+                break;
+                case 3: foamtankread += (256 * CAN.read());
                 break;
                 default: CAN.read();
                 break;
               }
+            if (watertankread < 1100) {watertank = watertankread / 10;};
+            if (foamtankread < 1100) {foamtank = foamtankread / 10;};
             }
           }
-        break;
+        }
 
-        case (int)0xc010201:          // Fuel tank level
-          // Serial.print("f");
+        else if (ID == (int)0xc010501){                               // Pump speed
+          // Serial.print("e");
           while (CAN.available()){
-            FuelTank = 0;
+            PTOSpeedread = 0;
             for (int i = 0; i<CAN.packetDlc(); i++){
               switch (i){
-                case 4: FuelTank += CAN.read();
+                case 4: PTOSpeedread += CAN.read();
                 break;
-                case 5: FuelTank += (256 * CAN.read());
+                case 5: PTOSpeedread += (256 * CAN.read());
                 break;
                 default: CAN.read();
                 break;
               }
+              Serial.print(ID);
+              Serial.print(" ");
+              Serial.println(PTOSpeedread);
+            if (PTOSpeedread < 10000) {PTOSpeed = PTOSpeedread;};
+            }
+          }
+        }
+
+        else if (ID >= (int)0xc010200 && ID < (int)0xc010300){          // Fuel tank level
+          // Serial.print("f");
+          while (CAN.available()){
+            FuelTankread = 0;
+            for (int i = 0; i<CAN.packetDlc(); i++){
+              switch (i){
+                case 4: FuelTankread += (1 * CAN.read());
+                break;
+                case 5: FuelTankread += (256 * CAN.read());
+                break;
+                default: CAN.read();
+                break;
+              }
+              if (FuelTankread < 65000) {FuelTank = FuelTankread / 10;};
             }
             // FuelTank = FuelTank / 10;
           }
-        break;
+        }
 
-        case (int)0xc010601:    // engine temp
+        else if (ID>=(int)0xc010600 && ID < (int)0xc010700){    // engine temp
           // Serial.print("g");
           while (CAN.available()){
-            EngCoolTemp = -40;
+            EngCoolTempread = -40;
             for (int i = 0; i<CAN.packetDlc(); i++){
               switch (i){
-                case 0: EngCoolTemp += CAN.read();
+                case 0: EngCoolTempread += CAN.read();
                 break;
                 default: CAN.read();
                 break;
               }
+              if (EngCoolTempread < 200) EngCoolTemp = EngCoolTempread;
             }
           }
-        break;  
-      }
+        } 
+      
 
     if ((millis() - Lastupdate > UpdateInterval)){
       char buffer[2048];
+      jsonc2w["ptospeed"] = PTOSpeed;
       jsonc2w["pressure"] = pressure;
       jsonc2w["watertank"] = watertank;
       jsonc2w["fueltank"] = FuelTank;
       jsonc2w["engcooltemp"] = EngCoolTemp;
 
       serializeJson(jsonc2w, buffer);
-      // Serial.println("");
+      Serial.println();
       Serial.println(buffer);
       ws.textAll(buffer);
       Lastupdate = millis();

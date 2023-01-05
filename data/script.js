@@ -12,12 +12,12 @@ var gaugeWatertank = new RadialGauge({
   title: "Watertank",
   fontTitleSize: 80,
   fontTitleWeight: "bold",
-  width: 300,
-  height: 300,
-  units: "LITERS",
+  width: 200,
+  height: 200,
+  units: "%",
   fontUnitsSize: 80,
   minValue: 0,
-  maxValue: 2500,
+  maxValue: 100,
   colorValueBoxRect: "#049faa",
   colorValueBoxRectEnd: "#049faa",
   colorValueBoxBackground: "#f1fbfc",
@@ -25,11 +25,11 @@ var gaugeWatertank = new RadialGauge({
   valueDec: 0,
   majorTicks: [
       "0",
-      "500",
-      "1000",
-      "1500",
-      "2000",
-      "2500"
+      "20",
+      "40",
+      "60",
+      "80",
+      "100"
   ],
   fontValueSize: 40,
   fontNumbersSize: 30,
@@ -39,16 +39,16 @@ var gaugeWatertank = new RadialGauge({
   highlights: [
       {
           "from": 0,
-          "to": 250,
+          "to": 20,
           "color": "red"
       },
       {
-          "from": 500,
-          "to": 2500,
+          "from": 40,
+          "to": 100,
           "color": "blue"
       },
-      {   "from": 250,
-          "to": 500,
+      {   "from": 20,
+          "to": 40,
           "color": "yellow"
       }
   ],
@@ -71,8 +71,8 @@ var gaugePressure = new RadialGauge({
   title: "Pressure",
   fontTitleSize: 80,
   fontTitleWeight: "bold",
-  width: 300,
-  height: 300,
+  width: 200,
+  height: 200,
   units: "BAR",
   fontUnitsSize: 80,
   minValue: 0,
@@ -128,8 +128,8 @@ var gaugeFueltank = new RadialGauge({
     title: "Fueltank",
     fontTitleSize: 80,
     fontTitleWeight: "bold",
-    width: 300,
-    height: 300,
+  width: 200,
+  height: 200,
     units: "%",
     fontUnitsSize: 80,
     minValue: 0,
@@ -186,8 +186,8 @@ var gaugeFueltank = new RadialGauge({
     title: "Engine temp",
     fontTitleSize: 80,
     fontTitleWeight: "bold",
-    width: 300,
-    height: 300,
+  width: 200,
+  height: 200,
     units: "C",
     fontUnitsSize: 80,
     minValue: -40,
@@ -238,6 +238,64 @@ var gaugeFueltank = new RadialGauge({
     animation: false
   }).draw();
     
+  // Create PTOSPpeed Gauge
+var gaugePTOspeed = new RadialGauge({
+  renderTo: 'gauge-ptospeed',
+  title: "PUMP RPM",
+  fontTitleSize: 80,
+  fontTitleWeight: "bold",
+  width: 200,
+  height: 200,
+  units: "/MIN",
+  fontUnitsSize: 80,
+  minValue: 0,
+  maxValue: 5000,
+  colorValueBoxRect: "#049faa",
+  colorValueBoxRectEnd: "#049faa",
+  colorValueBoxBackground: "#f1fbfc",
+  valueInt: 4,
+  valueDec: 0,
+  majorTicks: [
+      "0",
+      "1000",
+      "2000",
+      "3000",
+      "4000",
+      "5000"
+  ],
+  fontValueSize: 40,
+  fontNumbersSize: 30,
+  minorTicks: 4,
+  strokeTicks: true,
+  colorPlate: "white",
+  highlights: [
+      {
+          "from": 4000,
+          "to": 5000,
+          "color": "red"
+      },
+      {
+          "from": 3000,
+          "to": 4000,
+          "color": "yellow"
+      },
+      {   "from": 0,
+          "to": 3000,
+          "color": "green"
+      }
+  ],
+  borderShadowWidth: 0,
+  borders: false,
+  needleType: "arrow",
+  colorNeedle: "grey",
+  colorNeedleEnd: "grey",
+  needleWidth: 4,
+  needleCircleSize: 6,
+  colorNeedleCircleOuter: "grey",
+  needleCircleOuter: true,
+  needleCircleInner: false,
+  animation: false
+}).draw();
  
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
@@ -275,23 +333,26 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-   console.log(event.data);
-   var data = JSON.parse(event.data); 
-   if ("watertank" in data) {
-    gaugeWatertank.value = data.watertank;
+    console.log(event.data);
+    var data = JSON.parse(event.data); 
+    if ("watertank" in data) {
+        gaugeWatertank.value = data.watertank;
     }
-   if ("pressure" in data) {
-     gaugePressure.value = data.pressure;
+    if ("pressure" in data) {
+        gaugePressure.value = data.pressure;
     }
     if ("fueltank" in data) {
         gaugeFueltank.value = data.fueltank;
-        }
-       if ("engcooltemp" in data) {
-         gaugeEngtemp.value = data.engcooltemp;
-        }
+    }
+    if ("engcooltemp" in data) {
+        gaugeEngtemp.value = data.engcooltemp;
+    }
+    if ("ptospeed" in data) {
+        gaugePTOspeed.value = data.ptospeed;
+    }
 } 
 
 function getReadings(){
-  gaugeHum.value = 7;
-  gaugeTemp.value = 13;
+/*   gaugeHum.value = 7;
+  gaugeTemp.value = 13; */
 }

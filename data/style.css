@@ -78,7 +78,7 @@ html {
   .alerts {
     display: grid;
     gap: 10px;
-    grid-template-columns: auto 320px 320px auto;
+    grid-template-columns: auto 220px 220px auto;
     grid-template-rows: 80px;
     align-items: center;
     align-content: center;
@@ -86,6 +86,6 @@ html {
   .container {
     display: grid;
     gap: 20px;
-    grid-template-columns: auto 320px 320px auto;
-    grid-auto-rows: 320px;
+    grid-template-columns: auto 220px 220px auto;
+    grid-auto-rows: 220px;
   }
