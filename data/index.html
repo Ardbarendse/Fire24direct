@@ -15,14 +15,14 @@
     <div class="dashboard">
       <div class="alerts">
         <div class="whitebox" background="white"></div>
-        <div id="led" class="on" ></div>
-        <div class="redbox">content</div>
+        <div id="led" class="%STATE%" ></div>
+        <div class="redbox">%WARNINGTEXT%</div>
         <div class="whitebox" background="white"></div>
       </div>
       <div class="container">
         <div class="whitebox" background="white"></div>
         <gauge>
-          <canvas id="gauge-watertank"></canvas>
+          <canvas id="gauge-ptospeed"></canvas>
         </gauge>
         <gauge>
           <canvas id="gauge-pressure"></canvas>
@@ -38,7 +38,10 @@
         <div class="whitebox" background="white"></div>
         <div class="whitebox" background="white"></div>
         <gauge>
-          <canvas id="gauge-ptospeed"></canvas>
+          <canvas id="gauge-watertank"></canvas>
+        </gauge>
+        <gauge>
+          <canvas id="gauge-foamtank"></canvas>
         </gauge>
         <div class="whitebox" background="white"></div>
         <div class="whitebox" background="white"></div>      </div>
@@ -46,3 +49,4 @@
     <script src="script.js"></script>
   </body>
 </html>
+
