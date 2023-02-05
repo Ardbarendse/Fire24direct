@@ -21,7 +21,7 @@ var gaugeWatertank = new RadialGauge({
   colorValueBoxRect: "#049faa",
   colorValueBoxRectEnd: "#049faa",
   colorValueBoxBackground: "#f1fbfc",
-  valueInt: 4,
+  valueInt: 3,
   valueDec: 0,
   majorTicks: [
       "0",
@@ -137,7 +137,7 @@ var gaugeFueltank = new RadialGauge({
     colorValueBoxRect: "#049faa",
     colorValueBoxRectEnd: "#049faa",
     colorValueBoxBackground: "#f1fbfc",
-    valueInt: 4,
+    valueInt: 3,
     valueDec: 0,
     majorTicks: [
         "0",
@@ -195,7 +195,7 @@ var gaugeFueltank = new RadialGauge({
     colorValueBoxRect: "#049faa",
     colorValueBoxRectEnd: "#049faa",
     colorValueBoxBackground: "#f1fbfc",
-    valueInt: 4,
+    valueInt: 3,
     valueDec: 0,
     majorTicks: [
         "-40",
@@ -296,6 +296,64 @@ var gaugePTOspeed = new RadialGauge({
   needleCircleInner: false,
   animation: false
 }).draw();
+
+var gaugeFoamtank = new RadialGauge({
+    renderTo: 'gauge-foamtank',
+    title: "Foamtank",
+    fontTitleSize: 80,
+    fontTitleWeight: "bold",
+    width: 200,
+    height: 200,
+    units: "%",
+    fontUnitsSize: 80,
+    minValue: 0,
+    maxValue: 100,
+    colorValueBoxRect: "#049faa",
+    colorValueBoxRectEnd: "#049faa",
+    colorValueBoxBackground: "#f1fbfc",
+    valueInt: 3,
+    valueDec: 0,
+    majorTicks: [
+        "0",
+        "20",
+        "40",
+        "60",
+        "80",
+        "100"
+    ],
+    fontValueSize: 40,
+    fontNumbersSize: 30,
+    minorTicks: 4,
+    strokeTicks: true,
+    colorPlate: "white",
+    highlights: [
+        {
+            "from": 0,
+            "to": 20,
+            "color": "red"
+        },
+        {
+            "from": 40,
+            "to": 100,
+            "color": "blue"
+        },
+        {   "from": 20,
+            "to": 40,
+            "color": "yellow"
+        }
+    ],
+    borderShadowWidth: 0,
+    borders: false,
+    needleType: "arrow",
+    colorNeedle: "grey",
+    colorNeedleEnd: "grey",
+    needleWidth: 4,
+    needleCircleSize: 6,
+    colorNeedleCircleOuter: "grey",
+    needleCircleOuter: true,
+    needleCircleInner: false,
+    animation: false
+  }).draw();
  
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
@@ -349,6 +407,15 @@ function onMessage(event) {
     }
     if ("ptospeed" in data) {
         gaugePTOspeed.value = data.ptospeed;
+    }
+    if ("foamtank" in data) {
+        gaugeFoamtank.value = data.foamtank;
+    }
+    if ("warning" in data) {
+        document.getElementById('led').className = data.warning;
+    }
+    if ("warningtext" in data) {
+        document.getElementById('warningtext').innerHTML = data.warningtext;
     }
 } 
 
