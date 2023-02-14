@@ -366,7 +366,6 @@ window.addEventListener('load', onLoad);
 
 function onLoad(event) {
     initWebSocket();
-   // initButton();
 }
 
 // ----------------------------------------------------------------------------

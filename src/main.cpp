@@ -7,7 +7,7 @@
 #include <CANController.h>
 
 bool testversion = true;
-int SendDelay = 50;
+int SendDelay = 100;
 
 // WiFi credentials
 const char *ssid = "Fire24test";
@@ -24,7 +24,7 @@ uint16_t ReadValue = 0;
 float ReadFloat = 0;
 
 
-int UpdateInterval = 500;         //dashboard update ms
+int UpdateInterval = 250;         //dashboard update ms
 int Lastupdate = 0;
 
 byte Faultbyte = 0xdf;            // variables for sending test warnings
@@ -44,6 +44,7 @@ uint8_t FuelByte2 = 0;
 uint8_t EngCoolTempByte = 0;
 float sensor = 0;
 float sensoravg = 0;
+float sensoravg2 = 0;
 
 TaskHandle_t Receive, Send;
 
@@ -170,7 +171,7 @@ void onReceive(void * pvParameters) {
       if (millis() - Lastupdate > UpdateInterval)
       {
         serializeJson(jsonc2w, buffer);
-        // Serial.println(buffer);
+        Serial.println(buffer);
         ws.textAll(buffer);
         Lastupdate = millis();
         jsonc2w.clear();
@@ -183,19 +184,20 @@ void onReceive(void * pvParameters) {
 void SendData(){
   for (int i = 0; i < 10; i++)
   {
-    sensor++;
+    sensor += 3;
     sensoravg = int(1000 * (1 + sin(sensor/60)));
-    if (sensor == 720) sensor = 0;
+    sensoravg2 = int(1000 * (1 + cos(sensor/60)));
+    if (sensor > 720) sensor = 0;
     WaterByte1 = int(sensoravg / 2) % 256;
-    WaterByte2 = (sensoravg / 2) / 256;
+    WaterByte2 = 3; //(sensoravg / 2) / 256;
     FuelByte1 = ((2000 - (int)sensoravg) / 2) % 256;  
-    FuelByte2 = ((2000 - sensoravg) / 2) / 256;  
-    EngCoolTempByte = ((2000 - sensoravg) / 10);
+    FuelByte2 = 2; //((2000 - sensoravg) / 2) / 256;  
+    EngCoolTempByte = ((2000 - sensoravg2) / 10);
     // Serial.println(EngCoolTempByte);
 
     CAN.beginExtendedPacket(0xc040208);           // pump pressure
-    CAN.write((byte)(int(sensoravg) & 0xff));
-    CAN.write((byte)(int(sensoravg) >> 8));
+    CAN.write((byte)(int(sensoravg * 1.5) & 0xff));
+    CAN.write((byte)(int(sensoravg * 1.5) >> 8));
     CAN.write(3);
     CAN.write(4);
     CAN.write(5);
@@ -206,7 +208,7 @@ void SendData(){
 
     delay(SendDelay);
 
-    CAN.beginExtendedPacket(0x0c070001);          // water tank level + foam tank level
+    CAN.beginExtendedPacket(0x0c070001);          // water tank level 
     CAN.write((byte)(int(sensoravg / 2) & 0xff));
     CAN.write((byte)(int(sensoravg / 2) >> 8));
     CAN.write(0xff);  
@@ -224,8 +226,8 @@ void SendData(){
     CAN.write('7');
     CAN.write((byte)WaterByte1);
     CAN.write((byte)WaterByte2);
-    CAN.write((byte)FuelByte1);  
-    CAN.write((byte)FuelByte2);
+    CAN.write((byte)(int(sensoravg / 2) & 0xff));  
+    CAN.write((byte)(int(sensoravg / 2) >> 8 ));
     CAN.write('a');
     CAN.write('b');
     CAN.endPacket();
@@ -245,11 +247,11 @@ void SendData(){
 
     delay(SendDelay);
     
-    CAN.beginExtendedPacket(0x0c070008);          // water tank level + foam tank level
+    CAN.beginExtendedPacket(0x0c070008);          //  foam tank level
     CAN.write(0xff);
     CAN.write(0xff);
-    CAN.write((byte)(int(sensoravg / 2) & 0xff));
-    CAN.write((byte)(int(sensoravg / 2) >> 8));
+    CAN.write((byte)(int(sensoravg2 / 2) & 0xff));
+    CAN.write((byte)(int(sensoravg2 / 2) >> 8));
     CAN.write(0xff);
     CAN.write(0xff);
     CAN.write('2');
@@ -364,6 +366,7 @@ void setup() {
     if (testversion)
     {
       CAN.loopback();
+      Serial.println("Loopback active");
       Lastfaultswitch = millis();
     };
 }
